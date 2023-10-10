@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EV Charging Points</title>
+    <!-- Add Leaflet CSS and JavaScript for map display -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+        /* Styling for buttons */
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Styling for map container */
+        #mapid {
+            height: 500px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<button onclick="fetchLocation()">Show My Location</button>
+<button onclick="getNearestChargingPoint()">Find Nearest Charging Point</button>
+
+<form id="locationForm" method="POST" action="/get_nearest">
+    <input type="hidden" id="latitude" name="latitude">
+    <input type="hidden" id="longitude" name="longitude">
+</form>
+
+<!-- Map Display Container -->
+<div id="mapid"></div>
+
+<script>
+    // Initialize the map
+    var mymap = L.map('mapid').setView([0.3476, 32.5825], 13);  // Centered at Kampala
+
+    // Set up the OSM layer 
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
+        maxZoom: 18,
+    }).addTo(mymap);
+
+    var userMarker;
+    var chargingPointMarker;
+
+    function fetchLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition);
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    }
+
+    function showPosition(position) {
+        document.getElementById('latitude').value = position.coords.latitude;
+        document.getElementById('longitude').value = position.coords.longitude;
+
+        // Add a marker for user's location
+        if (userMarker) {
+            mymap.removeLayer(userMarker);
+        }
+        userMarker = L.marker([position.coords.latitude, position.coords.longitude]).addTo(mymap)
+            .bindPopup("You are here").openPopup();
+    }
+
+    function getNearestChargingPoint() {
+        document.getElementById('locationForm').submit();
+    }
+
+    // Add Marker Logic in JavaScript
+    {% if lat and lon %}
+    if (chargingPointMarker) {
+        mymap.removeLayer(chargingPointMarker);
+    }
+    chargingPointMarker = L.marker([{{ lat }}, {{ lon }}]).addTo(mymap).bindPopup("Nearest Charging Point").openPopup();
+    {% endif %}
+</script>
+
+</body>
+</html>
